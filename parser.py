@@ -64,13 +64,18 @@ def get_rating_by_url(url):
     row = get_page(url).find('div', {'class': 'rating-table-row flex-row flex-align-items-center'})
     soup = BeautifulSoup(str(row), 'html.parser')
     rating['place'] = int(soup.find('strong').string)
-    rating['points'] = float(re.search(r'\d{2,}.\d',
+    rating['points'] = float(re.search(r'\d{2,}.?\d',
                                        str(soup.find('div', {'class': 'rating-table-row-td3 rating-table-points'})))
                              .group(0))
-    rating['games'] = int(re.search(r' \d+',
-                                    str(soup.find('div', {'class': 'rating-table-kol-game'}))).group(0).strip(' '))
+    games = re.search(r'> ?\d+<', str(soup.find('div', {'class': 'rating-table-kol-game'})))
+    rating['games'] = int(games.group(0).strip('>').strip('<').strip(' '))
     return rating
 
 
-def get_rating():
-    return [get_rating_by_url(global_rating_url)]
+def get_rating(str):
+    if str == 'local':
+        return get_rating_by_url(local_rating_url)
+    elif str == 'global':
+        return get_rating_by_url(global_rating_url)
+    else:
+        return None
