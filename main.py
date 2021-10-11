@@ -56,7 +56,7 @@ def print_gi(gi):
 def get_games_schedule():
     games_info = {'date': [], 'place': [], 'name': [], 'description': [], 'time': [], 'price': [], 'link': []}
     games_info = get_info(games_info)
-    print_gi(games_info)
+    # print_gi(games_info)
     return games_info
 
 
@@ -68,43 +68,51 @@ def convert_game_to_text(info, i):
            + info['price'][i]
 
 
+def menu_buttons():
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    key_summary = telebot.types.InlineKeyboardButton(text='Все игры', callback_data='all_games')
+    keyboard.add(key_summary)
+    return keyboard
+
+
+def game_info_buttons(data):
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    # keys_row = []
+    for i in range(len(data['date'])):
+        keyboard.add(telebot.types.InlineKeyboardButton(text=str(i + 1), callback_data='game'+str(i + 1)))
+    # keyboard.row(keys_row)
+    return keyboard
+
+
 def start_bot(info):
     token = '2002394082:AAG-jp-egUtYG-DaP62oYwbM1AYxdN2sxqQ'
     bot = telebot.TeleBot(token)
+    msg = ''
+    for i in range(len(info['date'])):
+        msg += convert_game_to_text(info, i)
+        if i != len(info['date']):
+            msg += '\n------------\n'
 
     @bot.message_handler(content_types=['text'])
     def get_text_messages(message):
-        if message.text.lower() == 'игры':
-            msg = ''
-            for i in range(len(info['date'])):
-                msg += convert_game_to_text(info, i)
-                if i != len(info['date']):
-                    msg += '\n------------\n'
-            bot.send_message(
-                message.from_user.id,
-                msg + '\nОтправь номер игры, чтобы прочитать описание и получить ссылку на регистрацию'
-            )
-        elif message.text == '/help':
-            bot.send_message(message.from_user.id, "Напиши Игры")
-        elif message.text.isdigit():
-            i = int(message.text) - 1
-            if i < len(info['date']):
-                bot.send_message(
-                    message.from_user.id,
-                    info['name'][i] + '\n'
-                    + info['date'][i] + ' ' + info['time'][i] + '\n'
-                    + info['description'][i] + '\n'
-                    + info['place'][i] + '\n'
-                    + info['price'][i] + '\n'
-                    + 'Ссылка на регистрацию: ' + info['link'][i]
-                )
+        bot.send_message(message.from_user.id, "Лови игры:", reply_markup=menu_buttons())
+
+        @bot.callback_query_handler(func=lambda call: True)
+        def callback_worker(call):
+            if call.data == "all_games":
+                bot.send_message(call.message.chat.id, msg, reply_markup=game_info_buttons(info))
             else:
-                bot.send_message(
-                    message.from_user.id,
-                    'Неверный номер игры, попробуй от 1 до ' + str(len(info['date']))
-                )
-        else:
-            bot.send_message(message.from_user.id, "Напиши /help.")
+                for j in range(len(info['date'])):
+                    if call.data == 'game'+str(j + 1):
+                        bot.send_message(
+                            message.from_user.id,
+                            info['name'][i] + '\n'
+                            + info['date'][i] + ' ' + info['time'][i] + '\n'
+                            + info['description'][i] + '\n'
+                            + info['place'][i] + '\n'
+                            + info['price'][i] + '\n'
+                            + 'Ссылка на регистрацию: ' + info['link'][i]
+                        )
 
     bot.polling(none_stop=True, interval=0)
 
