@@ -1,17 +1,12 @@
 from bs4 import BeautifulSoup
 import urllib.request as ur
 import ssl
+import re
 
 
-# рейтинг:
-#   https://kzn.quizplease.ru/rating?QpRaitingSearch%5Btext%5D=%D0%BC%D0%BE%D0%B6%D0%BD%D0%BE+%D0%BF%D0%BE%D1%82%D0%B8%D1%88%D0%B5&QpRaitingSearch%5Bgeneral%5D=0&QpRaitingSearch%5Bleague%5D=1
-#       за сезон
-#   https://kzn.quizplease.ru/rating?QpRaitingSearch%5Btext%5D=%D0%BC%D0%BE%D0%B6%D0%BD%D0%BE+%D0%BF%D0%BE%D1%82%D0%B8%D1%88%D0%B5&QpRaitingSearch%5Bgeneral%5D=1&QpRaitingSearch%5Bleague%5D=1
-#       за все время
-
-def get_page():
+def get_page(url):
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-    page = ur.urlopen('https://kzn.quizplease.ru/schedule', context=ssl_context).read()
+    page = ur.urlopen(url, context=ssl_context).read()
     return BeautifulSoup(page, 'html.parser')
 
 
@@ -27,7 +22,7 @@ def get_game_link(soup):
 
 
 def get_info(gi):
-    games = get_page().find_all('div', {'class': 'schedule-column'})
+    games = get_page('https://kzn.quizplease.ru/schedule').find_all('div', {'class': 'schedule-column'})
     for game in games:
         soup = BeautifulSoup(str(game), 'html.parser')
         gi['date'].append(soup.find('div', {'class': 'h3 h3-green h3-mb10'}).string)
@@ -58,3 +53,24 @@ def get_games_schedule():
     games_info = get_info(games_info)
     # print_gi(games_info)
     return games_info
+
+
+local_rating_url = 'https://kzn.quizplease.ru/rating?QpRaitingSearch%5Btext%5D=%D0%BC%D0%BE%D0%B6%D0%BD%D0%BE+%D0%BF%D0%BE%D1%82%D0%B8%D1%88%D0%B5&QpRaitingSearch%5Bgeneral%5D=0&QpRaitingSearch%5Bleague%5D=1'
+global_rating_url = 'https://kzn.quizplease.ru/rating?QpRaitingSearch%5Btext%5D=%D0%BC%D0%BE%D0%B6%D0%BD%D0%BE+%D0%BF%D0%BE%D1%82%D0%B8%D1%88%D0%B5&QpRaitingSearch%5Bgeneral%5D=1&QpRaitingSearch%5Bleague%5D=1'
+
+
+def get_rating_by_url(url):
+    rating = {'place': 0, 'games': 0, 'points': 0}
+    row = get_page(url).find('div', {'class': 'rating-table-row flex-row flex-align-items-center'})
+    soup = BeautifulSoup(str(row), 'html.parser')
+    rating['place'] = int(soup.find('strong').string)
+    rating['points'] = float(re.search(r'\d{2,}.\d',
+                                       str(soup.find('div', {'class': 'rating-table-row-td3 rating-table-points'})))
+                             .group(0))
+    rating['games'] = int(re.search(r' \d+',
+                                    str(soup.find('div', {'class': 'rating-table-kol-game'}))).group(0).strip(' '))
+    return rating
+
+
+def get_rating():
+    return [get_rating_by_url(global_rating_url)]

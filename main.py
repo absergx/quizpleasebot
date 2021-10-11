@@ -66,10 +66,13 @@ def get_text_messages(message):
         if message.text == game_list_name:
             bot.send_message(message.chat.id, form_message_games(info), reply_markup=game_info_buttons(info))
         elif message.text == rating_name:
-            bot.send_message(message.chat.id, 'Скоро научусь считать рейтинг')
+            rating = parser.get_rating()
+            bot.send_message(message.chat.id, f"За все время:\nМесто: {rating[0]['place']}\nИгры: {rating[0]['games']}"
+                                              f"\nБаллы: {rating[0]['points']}")
         elif message.text == feedback_name:
             bot.send_message(message.chat.id, 'Напиши, что бы ты хотел(а) добавить или изменить:')
         else:
+            print(message.date)
             with open('history.txt', 'a') as f:
                 f.write(message.from_user.username + ': ' + message.text + '\n')
 
