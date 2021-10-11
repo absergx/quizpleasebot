@@ -71,7 +71,7 @@ def get_text_messages(message):
             bot.send_message(message.chat.id, 'Напиши, что бы ты хотел(а) добавить или изменить:')
         else:
             with open('history.txt', 'a') as f:
-                f.write(message.from_user.username + ': ' + message.text)
+                f.write(message.from_user.username + ': ' + message.text + '\n')
 
 
 @bot.callback_query_handler(func=lambda call: True)
