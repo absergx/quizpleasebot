@@ -8,6 +8,11 @@ import parser
 import config
 
 
+game_list_name = '🎰 Список игр'
+rating_name = '📈 Рейтинг'
+coinflip_name = '🪙 Подбросить монетку'
+
+
 def convert_game_to_text(info, i):
     return 'Игра ' + str(i + 1) + '\n' \
            + info['name'][i] + '\n' \
@@ -48,9 +53,9 @@ bot = telebot.TeleBot(config.TOKEN)
 @bot.message_handler(commands=['start', 'help'])
 def main_keyboard(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    button1 = types.KeyboardButton('ð Список игр')
-    button2 = types.KeyboardButton('ð Рейтинг')
-    button3 = types.KeyboardButton('Подбросить монетку')
+    button1 = types.KeyboardButton(game_list_name)
+    button2 = types.KeyboardButton(rating_name)
+    button3 = types.KeyboardButton(coinflip_name)
     markup.add(button1, button2, button3)
     bot.send_message(message.chat.id, 'Кнопки - хуепки', reply_markup=markup)
 
@@ -58,11 +63,11 @@ def main_keyboard(message):
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     if message.chat.type == 'private':
-        if message.text == 'ð Список игр':
+        if message.text == game_list_name:
             bot.send_message(message.chat.id, form_message_games(info), reply_markup=game_info_buttons(info))
-        elif message.text == 'ð Рейтинг':
+        elif message.text == rating_name:
             bot.send_message(message.chat.id, 'Скоро научусь считать рейтинг')
-        elif message.text == 'Подбросить монетку':
+        elif message.text == coinflip_name:
             r = random.randint(1, 2)
             if r == 1:
                 bot.send_message(message.chat.id, 'Орёл')
