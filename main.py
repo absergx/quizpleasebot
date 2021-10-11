@@ -10,7 +10,7 @@ import config
 
 game_list_name = '🎰 Список игр'
 rating_name = '📈 Рейтинг'
-coinflip_name = '🪙 Подбросить монетку'
+feedback_name = '✍️ Предложения'
 
 
 def convert_game_to_text(info, i):
@@ -55,7 +55,7 @@ def main_keyboard(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     button1 = types.KeyboardButton(game_list_name)
     button2 = types.KeyboardButton(rating_name)
-    button3 = types.KeyboardButton(coinflip_name)
+    button3 = types.KeyboardButton(feedback_name)
     markup.add(button1, button2, button3)
     bot.send_message(message.chat.id, 'Кнопки - хуепки', reply_markup=markup)
 
@@ -67,12 +67,11 @@ def get_text_messages(message):
             bot.send_message(message.chat.id, form_message_games(info), reply_markup=game_info_buttons(info))
         elif message.text == rating_name:
             bot.send_message(message.chat.id, 'Скоро научусь считать рейтинг')
-        elif message.text == coinflip_name:
-            r = random.randint(1, 2)
-            if r == 1:
-                bot.send_message(message.chat.id, 'Орёл')
-            else:
-                bot.send_message(message.chat.id, 'Решка')
+        elif message.text == feedback_name:
+            bot.send_message(message.chat.id, 'Напиши, что бы ты хотел(а) добавить или изменить:')
+        else:
+            with open('history.txt', 'a') as f:
+                f.write(message.from_user.username + ': ' + message.text)
 
 
 @bot.callback_query_handler(func=lambda call: True)
