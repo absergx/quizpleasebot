@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import random
+
 import telebot
 from telebot import types
 import parser
@@ -25,7 +27,7 @@ def game_info_buttons(data):
     keyboard = types.InlineKeyboardMarkup()
     # keys_row = []
     for i in range(len(data['date'])):
-        keyboard.add(types.InlineKeyboardButton(text=str(i + 1), callback_data='game'+str(i + 1)))
+        keyboard.add(types.InlineKeyboardButton(text=str(i + 1), callback_data='game' + str(i + 1)))
     # keyboard.row(keys_row)
     return keyboard
 
@@ -39,38 +41,52 @@ def form_message_games(data):
     return msg
 
 
-def start_bot():
-    info = parser.get_games_schedule()
-    bot = telebot.TeleBot(config.TOKEN)
+info = parser.get_games_schedule()
+bot = telebot.TeleBot(config.TOKEN)
 
-    # markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    # button1 = types.KeyboardButton('ð Список игр')
-    # button2 = types.KeyboardButton('ð Рейтинг')
-    # markup.add(button1, button2)
 
-    @bot.message_handler(content_types=['text'])
-    def get_text_messages(message):
-        bot.send_message(message.from_user.id, "Лови игры:", reply_markup=menu_buttons())
+@bot.message_handler(commands=['start', 'help'])
+def main_keyboard(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    button1 = types.KeyboardButton('ð Список игр')
+    button2 = types.KeyboardButton('ð Рейтинг')
+    button3 = types.KeyboardButton('Подбросить монетку')
+    markup.add(button1, button2, button3)
+    bot.send_message(message.chat.id, 'Кнопки - хуепки', reply_markup=markup)
 
-        @bot.callback_query_handler(func=lambda call: True)
-        def callback_worker(call):
-            if call.data == "all_games":
-                bot.send_message(call.message.chat.id, form_message_games(info), reply_markup=game_info_buttons(info))
+
+@bot.message_handler(content_types=['text'])
+def get_text_messages(message):
+    if message.chat.type == 'private':
+        if message.text == 'ð Список игр':
+            bot.send_message(message.chat.id, form_message_games(info), reply_markup=game_info_buttons(info))
+        elif message.text == 'ð Рейтинг':
+            bot.send_message(message.chat.id, 'Скоро научусь считать рейтинг')
+        elif message.text == 'Подбросить монетку':
+            r = random.randint(1, 2)
+            if r == 1:
+                bot.send_message(message.chat.id, 'Орёл')
             else:
-                for j in range(len(info['date'])):
-                    if call.data == 'game'+str(j + 1):
-                        bot.send_message(
-                            message.from_user.id,
-                            info['name'][j] + '\n'
-                            + info['date'][j] + ' ' + info['time'][j] + '\n'
-                            + info['description'][j] + '\n'
-                            + info['place'][j] + '\n'
-                            + info['price'][j] + '\n'
-                            + 'Ссылка на регистрацию: ' + info['link'][j]
-                        )
-
-    bot.polling(none_stop=True, interval=0)
+                bot.send_message(message.chat.id, 'Решка')
 
 
-if __name__ == '__main__':
-    start_bot()
+@bot.callback_query_handler(func=lambda call: True)
+def callback_worker(call):
+    try:
+        if call.message:
+            for j in range(len(info['date'])):
+                if call.data == 'game' + str(j + 1):
+                    bot.send_message(
+                        call.message.chat.id,
+                        info['name'][j] + '\n'
+                        + info['date'][j] + ' ' + info['time'][j] + '\n'
+                        + info['description'][j] + '\n'
+                        + info['place'][j] + '\n'
+                        + info['price'][j] + '\n'
+                        + 'Ссылка на регистрацию: ' + info['link'][j]
+                    )
+    except Exception as e:
+        print(repr(e))
+
+
+bot.polling(none_stop=True, interval=0)
