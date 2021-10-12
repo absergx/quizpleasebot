@@ -54,9 +54,8 @@ def main_keyboard(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     button1 = types.KeyboardButton(game_list_name)
     button2 = types.KeyboardButton(rating_name)
-    button3 = types.KeyboardButton(feedback_name)
-    markup.add(button1, button2, button3)
-    bot.send_message(message.chat.id, 'Кнопки - хуепки', reply_markup=markup)
+    markup.add(button1, button2)
+    bot.send_message(message.chat.id, 'Добро пожаловать!', reply_markup=markup)
 
 
 def choice_rating_period_buttons():
@@ -74,12 +73,6 @@ def get_text_messages(message):
             bot.send_message(message.chat.id, form_message_games(info), reply_markup=game_info_buttons(info))
         elif message.text == rating_name:
             bot.send_message(message.chat.id, 'Выбери период', reply_markup=choice_rating_period_buttons())
-        elif message.text == feedback_name:
-            bot.send_message(message.chat.id, 'Напиши, что бы ты хотел(а) добавить или изменить:')
-        else:
-            print(message.date)
-            with open('history.txt', 'a') as f:
-                f.write(message.from_user.username + ': ' + message.text + '\n')
 
 
 @bot.callback_query_handler(func=lambda call: True)

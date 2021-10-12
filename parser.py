@@ -12,8 +12,10 @@ def get_page(url):
 
 def get_game_time(soup):
     info = soup.findAll('div', {'class': 'schedule-info'})
-    time = BeautifulSoup(str(info[2]), 'html.parser').find('div', {'class': 'techtext'}).string.split(' ')[1]
-    return time
+    time = BeautifulSoup(str(info[2]), 'html.parser').find('div', {'class': 'techtext'})
+    if time is None:
+        time = BeautifulSoup(str(info[1]), 'html.parser').find('div', {'class': 'techtext'})
+    return time.string.split(' ')[1]
 
 
 def get_game_link(soup):
